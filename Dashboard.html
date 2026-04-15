@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bhava's Study Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0c10;
+    --surface: #13141a;
+    --surface2: #1c1d25;
+    --border: #26273a;
+    --accent: #a78bfa;
+    --accent2: #f472b6;
+    --accent3: #34d399;
+    --accent4: #fb923c;
+    --yellow: #fbbf24;
+    --blue: #60a5fa;
+    --text: #ededf0;
+    --muted: #6b6b80;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
+  .container { max-width:1120px; margin:0 auto; padding:24px 16px; }
+
+  .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; animation:fadeUp 0.5s ease both; flex-wrap:wrap; gap:12px; }
+  .header h1 { font-family:'Syne',sans-serif; font-size:1.7rem; font-weight:800; letter-spacing:-0.03em; }
+  .header h1 span { color:var(--accent); }
+  .header p { color:var(--muted); font-size:0.8rem; margin-top:3px; }
+ 
+  
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:18px; animation:fadeUp 0.5s 0.1s ease both; }
+  .stat { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; transition:transform 0.2s,border-color 0.2s; }
+  .stat:hover { transform:translateY(-2px); border-color:var(--accent); }
+  .stat-label { font-size:0.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px; }
+  .stat-val { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; }
+  .stat:nth-child(1) .stat-val { color:var(--accent); }
+  .stat:nth-child(2) .stat-val { color:var(--accent3); }
+  .stat:nth-child(3) .stat-val { color:var(--accent4); }
+  .stat:nth-child(4) .stat-val { color:var(--accent2); }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:18px; }
+  .card-title { font-family:'Syne',sans-serif; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:14px; display:flex; align-items:center; gap:7px; }
+  .dot { width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0; }
+
+  
+  .subj-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; margin-bottom:16px; animation:fadeUp 0.5s 0.2s ease both; }
+
+  .subj-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; transition:border-color 0.2s; }
+  .subj-card:hover { border-color:var(--border); }
+
+  .subj-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .subj-name-wrap { display:flex; align-items:center; gap:8px; }
+  .subj-color { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .subj-title { font-family:'Syne',sans-serif; font-weight:700; font-size:0.92rem; }
+  .subj-full { font-size:0.72rem; color:var(--muted); margin-top:1px; }
+
+  .pill { padding:2px 9px; border-radius:100px; font-size:0.65rem; font-weight:600; letter-spacing:0.02em; }
+  .pill-done { background:rgba(52,211,153,0.15); color:var(--accent3); }
+  .pill-ongoing { background:rgba(167,139,250,0.15); color:var(--accent); }
+  .pill-pending { background:rgba(251,146,60,0.15); color:var(--accent4); }
+
+ 
+  .prog-wrap { margin-bottom:10px; }
+  .prog-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+  .prog-label { font-size:0.7rem; color:var(--muted); }
+  .prog-pct { font-family:'Syne',sans-serif; font-size:0.75rem; font-weight:700; }
+  .bar-outer { background:var(--surface2); border-radius:100px; height:5px; width:100%; }
+  .bar-inner { height:100%; border-radius:100px; transition:width 0.4s ease; }
+
+
+  .topics-list { list-style:none; display:flex; flex-direction:column; gap:5px; margin-bottom:10px; max-height:160px; overflow-y:auto; }
+  .topics-list::-webkit-scrollbar { width:3px; }
+  .topics-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:10px; }
+
+  .topic-item { display:flex; align-items:center; gap:8px; font-size:0.8rem; padding:6px 9px; background:var(--surface2); border-radius:8px; border:1px solid transparent; cursor:pointer; transition:all 0.2s; user-select:none; }
+  .topic-item:hover { border-color:var(--border); }
+  .topic-item.tdone { opacity:0.45; text-decoration:line-through; }
+  .t-chk { width:15px; height:15px; border:2px solid var(--border); border-radius:4px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:9px; transition:all 0.2s; }
+  .topic-item.tdone .t-chk { background:var(--accent3); border-color:var(--accent3); color:#000; }
+  .topic-item .del-btn { margin-left:auto; color:var(--muted); font-size:0.75rem; padding:0 3px; opacity:0; transition:opacity 0.2s; }
+  .topic-item:hover .del-btn { opacity:1; }
+
+  .add-topic-row { display:flex; gap:6px; }
+  .t-input { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:7px 10px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.78rem; outline:none; transition:border-color 0.2s; }
+  .t-input:focus { border-color:var(--accent); }
+  .t-input::placeholder { color:var(--muted); }
+  .add-btn { background:var(--accent); color:#fff; border:none; border-radius:8px; padding:7px 12px; font-family:'Syne',sans-serif; font-weight:700; font-size:0.75rem; cursor:pointer; transition:opacity 0.2s; white-space:nowrap; }
+  .add-btn:hover { opacity:0.8; }
+
+  
+  .bottom-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; animation:fadeUp 0.5s 0.4s ease both; }
+
+ 
+  .check-list { list-style:none; display:flex; flex-direction:column; gap:6px; }
+  .check-item { display:flex; align-items:center; gap:8px; font-size:0.8rem; padding:8px 10px; background:var(--surface2); border-radius:8px; border:1px solid transparent; cursor:pointer; transition:border-color 0.2s; user-select:none; }
+  .check-item:hover { border-color:var(--border); }
+  .check-item.done { opacity:0.4; text-decoration:line-through; }
+  .chk-box { width:16px; height:16px; border:2px solid var(--border); border-radius:4px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:9px; transition:all 0.2s; }
+  .check-item.done .chk-box { background:var(--accent3); border-color:var(--accent3); color:#000; }
+
+  
+  .timer-center { text-align:center; padding:4px 0; }
+  .timer-num { font-family:'Syne',sans-serif; font-size:2.6rem; font-weight:800; color:var(--accent3); letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+  .timer-btns { display:flex; gap:7px; justify-content:center; margin-top:8px; }
+  .tbtn { background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:6px 16px; border-radius:8px; font-family:'Syne',sans-serif; font-size:0.75rem; font-weight:700; cursor:pointer; transition:all 0.2s; }
+  .tbtn:hover { border-color:var(--accent3); color:var(--accent3); }
+  .tbtn.go { background:var(--accent3); color:#000; border-color:var(--accent3); }
+  .tbtn.go:hover { opacity:0.85; }
+  .presets { display:flex; gap:5px; justify-content:center; margin-top:8px; flex-wrap:wrap; }
+  .pre { background:transparent; border:1px solid var(--border); color:var(--muted); padding:3px 9px; border-radius:100px; font-size:0.68rem; cursor:pointer; transition:all 0.2s; }
+  .pre:hover { border-color:var(--accent3); color:var(--accent3); }
+  .focus-info { font-size:0.7rem; color:var(--muted); text-align:center; margin-top:7px; }
+
+  .quote-card { background:linear-gradient(135deg,#13141a,#16101f); border:1px solid rgba(167,139,250,0.2); position:relative; overflow:hidden; }
+  .quote-card::before { content:'"'; position:absolute; top:-14px; left:8px; font-family:'Syne',sans-serif; font-size:6rem; color:rgba(167,139,250,0.07); line-height:1; pointer-events:none; }
+  .quote-txt { font-size:0.88rem; font-style:italic; font-weight:300; line-height:1.65; color:var(--text); margin-bottom:10px; position:relative; }
+  .quote-auth { font-size:0.7rem; color:var(--accent); font-family:'Syne',sans-serif; font-weight:600; letter-spacing:0.05em; }
+  .new-q { background:transparent; border:1px solid rgba(167,139,250,0.3); color:var(--accent); border-radius:7px; padding:5px 12px; font-size:0.7rem; cursor:pointer; margin-top:10px; transition:background 0.2s; display:block; }
+  .new-q:hover { background:rgba(167,139,250,0.1); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);} }
+
+  @media(max-width:700px) {
+    .stats-row { grid-template-columns:repeat(2,1fr); }
+    .bottom-row { grid-template-columns:1fr; }
+    .subj-grid { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  
+  <div class="header">
+    <div>
+      <h1>Hey <span>Bhava</span> 👩‍💻</h1>
+      <p>KPR Institute · B.Tech IT · Sem 4 · Study: 7pm–11pm · Mon–Sat</p>
+    </div>
+
+  </div>
+
+  
+  <div class="stats-row">
+    <div class="stat"><div class="stat-label">Subjects</div><div class="stat-val">7</div></div>
+    <div class="stat"><div class="stat-label">Topics Done</div><div class="stat-val" id="global-done">0</div></div>
+    <div class="stat"><div class="stat-label">Focus Time</div><div class="stat-val" id="focus-val">0m</div></div>
+    <div class="stat"><div class="stat-label">Tasks Done</div><div class="stat-val" id="task-done-count">0</div></div>
+  </div>
+
+  
+  <div class="subj-grid" id="subj-grid"></div>
+
+  
+  <div class="bottom-row">
+
+    
+    <div class="card" style="animation:fadeUp 0.5s 0.3s ease both;">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span> Today's Tasks</div>
+      <ul class="check-list" id="check-list">
+        <li class="check-item" onclick="toggleTask(this)"><div class="chk-box"></div><span>PQT — Solve 5 problems</span></li>
+        <li class="check-item" onclick="toggleTask(this)"><div class="chk-box"></div><span>DAA — Read Sorting chapter</span></li>
+        <li class="check-item" onclick="toggleTask(this)"><div class="chk-box"></div><span>OS — Scheduling algos</span></li>
+        <li class="check-item" onclick="toggleTask(this)"><div class="chk-box"></div><span>PWD — Build Django view</span></li>
+        <li class="check-item" onclick="toggleTask(this)"><div class="chk-box"></div><span>IP — Mini webpage</span></li>
+      </ul>
+      <div style="display:flex;gap:6px;margin-top:10px;">
+        <input class="t-input" id="new-task" placeholder="Add a task...">
+        <button class="add-btn" onclick="addTask()">+</button>
+      </div>
+    </div>
+
+ 
+    <div class="card" style="animation:fadeUp 0.5s 0.35s ease both;">
+      <div class="card-title"><span class="dot" style="background:var(--accent3)"></span> Focus Timer</div>
+      <div class="timer-center">
+        <div class="timer-num" id="timer-disp">25:00</div>
+        <div class="timer-btns">
+          <button class="tbtn go" id="start-btn" onclick="toggleTimer()">Start</button>
+          <button class="tbtn" onclick="resetTimer()">Reset</button>
+        </div>
+        <div class="presets">
+          <button class="pre" onclick="setTimer(25)">25m</button>
+          <button class="pre" onclick="setTimer(45)">45m</button>
+          <button class="pre" onclick="setTimer(60)">1hr</button>
+          <button class="pre" onclick="setTimer(90)">90m</button>
+        </div>
+        <div class="focus-info" id="focus-info">Sessions: 0</div>
+      </div>
+    </div>
+
+    
+    <div class="card quote-card" style="animation:fadeUp 0.5s 0.4s ease both;">
+      <div class="card-title"><span class="dot" style="background:var(--accent)"></span> Daily Motivation</div>
+      <p class="quote-txt" id="q-text">"Consistency is the bridge between goals and accomplishment."</p>
+      <div class="quote-auth" id="q-auth">— Unknown</div>
+      <button class="new-q" onclick="newQuote()">New Quote ✦</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+const subjects = [
+  { id:'pqt', name:'PQT', full:'Probability & Queuing Theory', color:'#a78bfa',
+    topics:['Random Variables','Probability Distributions','Binomial Distribution','Poisson Distribution','Normal Distribution','Queuing Models'] },
+  { id:'daa', name:'DAA', full:'Design Analysis & Algorithms', color:'#34d399',
+    topics:['Asymptotic Notation','Divide & Conquer','Greedy Algorithms','Dynamic Programming','Graph Algorithms','NP Completeness'] },
+  { id:'dda', name:'DDA', full:'Database Design & Applications', color:'#f472b6',
+    topics:['ER Diagrams','Relational Model','SQL Basics','Joins & Subqueries','Normalization','Transactions & ACID'] },
+  { id:'os',  name:'OS',  full:'Operating System', color:'#fb923c',
+    topics:['Process Management','CPU Scheduling','Deadlocks','Memory Management','Virtual Memory','File Systems'] },
+  { id:'ip',  name:'IP',  full:'Internet Programming', color:'#60a5fa',
+    topics:['HTML5 Basics','CSS3 Styling','JavaScript Basics','DOM Manipulation','Bootstrap','Forms & Validation'] },
+  { id:'dm',  name:'DM',  full:'Digital Marketing', color:'#fbbf24',
+    topics:['SEO Basics','Social Media Marketing','Google Ads','Email Marketing','Analytics & Insights','Content Strategy'] },
+  { id:'pwd', name:'PWD', full:'Python Web Development', color:'#c084fc',
+    topics:['Python Basics Review','Django Setup','Models & ORM','Views & Templates','URL Routing','Forms & Deployment'] },
+];
+
+
+const state = {};
+subjects.forEach(s => {
+  state[s.id] = s.topics.map(() => false);
+});
+
+function getStatus(id) {
+  const done = state[id].filter(Boolean).length;
+  const total = state[id].length;
+  if (total === 0) return 'pending';
+  if (done === total) return 'done';
+  if (done > 0) return 'ongoing';
+  return 'pending';
+}
+
+function getPct(id) {
+  if (!state[id].length) return 0;
+  return Math.round((state[id].filter(Boolean).length / state[id].length) * 100);
+}
+
+function pillHTML(status) {
+  if (status === 'done') return '<span class="pill pill-done">Done ✓</span>';
+  if (status === 'ongoing') return '<span class="pill pill-ongoing">Ongoing</span>';
+  return '<span class="pill pill-pending">Pending</span>';
+}
+
+function updateGlobalDone() {
+  let total = 0;
+  subjects.forEach(s => { total += state[s.id].filter(Boolean).length; });
+  document.getElementById('global-done').textContent = total;
+}
+
+function renderCard(s) {
+  const pct = getPct(s.id);
+  const status = getStatus(s.id);
+  const topics = s.topics;
+
+  const topicsHTML = topics.map((t, i) => `
+    <li class="topic-item ${state[s.id][i] ? 'tdone' : ''}" onclick="toggleTopic('${s.id}',${i})">
+      <div class="t-chk">${state[s.id][i] ? '✓' : ''}</div>
+      <span>${t}</span>
+      <span class="del-btn" onclick="deleteTopic(event,'${s.id}',${i})">✕</span>
+    </li>
+  `).join('');
+
+  return `
+    <div class="subj-card" id="card-${s.id}">
+      <div class="subj-header">
+        <div class="subj-name-wrap">
+          <div class="subj-color" style="background:${s.color}"></div>
+          <div>
+            <div class="subj-title">${s.name}</div>
+            <div class="subj-full">${s.full}</div>
+          </div>
+        </div>
+        <div id="pill-${s.id}">${pillHTML(status)}</div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-top">
+          <span class="prog-label">Progress</span>
+          <span class="prog-pct" id="pct-${s.id}" style="color:${s.color}">${pct}%</span>
+        </div>
+        <div class="bar-outer">
+          <div class="bar-inner" id="bar-${s.id}" style="width:${pct}%;background:${s.color}"></div>
+        </div>
+      </div>
+      <ul class="topics-list" id="topics-${s.id}">${topicsHTML}</ul>
+      <div class="add-topic-row">
+        <input class="t-input" id="newtopic-${s.id}" placeholder="Add topic...">
+        <button class="add-btn" style="background:${s.color}" onclick="addTopic('${s.id}')">+ Add</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderAll() {
+  document.getElementById('subj-grid').innerHTML = subjects.map(renderCard).join('');
+}
+
+function toggleTopic(id, idx) {
+  state[id][idx] = !state[id][idx];
+  refreshCard(id);
+  updateGlobalDone();
+}
+
+function deleteTopic(e, id, idx) {
+  e.stopPropagation();
+  const s = subjects.find(x => x.id === id);
+  s.topics.splice(idx, 1);
+  state[id].splice(idx, 1);
+  refreshCard(id);
+  updateGlobalDone();
+}
+
+function addTopic(id) {
+  const inp = document.getElementById('newtopic-' + id);
+  const val = inp.value.trim();
+  if (!val) return;
+  const s = subjects.find(x => x.id === id);
+  s.topics.push(val);
+  state[id].push(false);
+  inp.value = '';
+  refreshCard(id);
+}
+
+function refreshCard(id) {
+  const s = subjects.find(x => x.id === id);
+  const pct = getPct(id);
+  const status = getStatus(id);
+
+  
+  document.getElementById('bar-' + id).style.width = pct + '%';
+  document.getElementById('pct-' + id).textContent = pct + '%';
+  document.getElementById('pill-' + id).innerHTML = pillHTML(status);
+
+  
+  const topicsHTML = s.topics.map((t, i) => `
+    <li class="topic-item ${state[id][i] ? 'tdone' : ''}" onclick="toggleTopic('${id}',${i})">
+      <div class="t-chk">${state[id][i] ? '✓' : ''}</div>
+      <span>${t}</span>
+      <span class="del-btn" onclick="deleteTopic(event,'${id}',${i})">✕</span>
+    </li>
+  `).join('');
+  document.getElementById('topics-' + id).innerHTML = topicsHTML;
+}
+
+let secs=25*60,total=25*60,running=false,iv=null,sessions=0,focusMins=0;
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function updDisp(){document.getElementById('timer-disp').textContent=fmt(secs);}
+function toggleTimer(){
+  const btn=document.getElementById('start-btn');
+  if(!running){
+    running=true;btn.textContent='Pause';
+    iv=setInterval(()=>{
+      secs--;updDisp();
+      if(secs<=0){
+        clearInterval(iv);running=false;btn.textContent='Start';
+        sessions++;focusMins+=Math.round(total/60);
+        document.getElementById('focus-info').textContent='Sessions: '+sessions;
+        const h=Math.floor(focusMins/60),m=focusMins%60;
+        document.getElementById('focus-val').textContent=h>0?h+'h '+m+'m':m+'m';
+        alert('Session done! Take a break Bhava 🎉');
+        secs=total;updDisp();
+      }
+    },1000);
+  }else{clearInterval(iv);running=false;btn.textContent='Start';}
+}
+function resetTimer(){clearInterval(iv);running=false;secs=total;document.getElementById('start-btn').textContent='Start';updDisp();}
+function setTimer(m){clearInterval(iv);running=false;total=m*60;secs=total;document.getElementById('start-btn').textContent='Start';updDisp();}
+
+
+function toggleTask(el){
+  el.classList.toggle('done');
+  el.querySelector('.chk-box').textContent=el.classList.contains('done')?'✓':'';
+  document.getElementById('task-done-count').textContent=document.querySelectorAll('.check-item.done').length;
+}
+function addTask(){
+  const v=document.getElementById('new-task').value.trim();if(!v)return;
+  const li=document.createElement('li');li.className='check-item';li.onclick=function(){toggleTask(this);};
+  li.innerHTML='<div class="chk-box"></div><span>'+v+'</span>';
+  document.getElementById('check-list').appendChild(li);
+  document.getElementById('new-task').value='';
+}
+
+
+const quotes=[
+  ["Consistency is the bridge between goals and accomplishment.","Unknown"],
+  ["The secret of getting ahead is getting started.","Mark Twain"],
+  ["Don't watch the clock; do what it does — keep going.","Sam Levenson"],
+  ["It always seems impossible until it's done.","Nelson Mandela"],
+  ["Your future is created by what you do today, not tomorrow.","Robert Kiyosaki"],
+  ["Push yourself, because no one else is going to do it for you.","Unknown"],
+  ["Small daily improvements lead to stunning results.","Unknown"],
+  ["Study hard in silence, let success make the noise.","Unknown"],
+  ["You didn't come this far to only come this far.","Unknown"],
+  ["Dream big. Work hard. Stay focused.","Unknown"],
+];
+let lastQ=0;
+function newQuote(){
+  let i;do{i=Math.floor(Math.random()*quotes.length);}while(i===lastQ);lastQ=i;
+  document.getElementById('q-text').textContent='"'+quotes[i][0]+'"';
+  document.getElementById('q-auth').textContent='— '+quotes[i][1];
+}
+
+
+renderAll();
+</script>
+</body>
+</html>
