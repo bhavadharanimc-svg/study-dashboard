@@ -16,7 +16,7 @@ A simple and modern Study Dashboard built using HTML to help track subjects, tas
 - JavaScript (inside HTML)
 
 
-📂** Project File**
+📂**Project File**
 
 - "Dashboard.html"
 
